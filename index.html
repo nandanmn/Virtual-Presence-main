@@ -1,111 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR with Background Removal</title>
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <style>
-    #uploadImage, #removeBgBtn, #startARBtn {
-      position: fixed;
-      top: 10px;
-      font-size: 16px;
-      background-color: #fff;
-      padding: 5px;
-      border: 1px solid #ccc;
-      cursor: pointer;
-    }
-    #uploadImage {
-      left: 10px;
-    }
-    #removeBgBtn {
-      left: auto;
-      right: 10px;
-    }
-    #startARBtn {
-      left: 10px;
-      bottom: 10px;
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Screenshot Overlay with Background Removal</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        .control-button {
+            position: fixed;
+            font-size: 14px;
+            background-color: #fff;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            z-index: 9999;
+        }
+
+        #startCapture {
+            top: 10px;
+            left: 10px;
+        }
+
+        #startARBtn {
+            top: 10px;
+            left: 150px;
+            display: none;
+        }
+
+        #removeBgBtn {
+            top: 10px;
+            left: 290px;
+            display: none;
+        }
+
+        #screenshotDisplay {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            max-width: 150px;
+            max-height: 150px;
+            border: 2px solid #ccc;
+            display: none;
+            z-index: 9999;
+        }
+
+        #uploadImage {
+            display: none;
+        }
+    </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
-  <!-- AR Scene -->
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    <!-- Marker for tracking -->
-    <a-marker type="pattern" url="pattern-Batman.patt">
-      <!-- Plane to display the uploaded or processed image -->
-      <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="3" height="6.0" material="shader: flat;"></a-plane>
-    </a-marker>
-    <!-- Camera to view the scene -->
-    <a-entity camera></a-entity>
-  </a-scene>
+    <!-- Control Buttons -->
+    <button id="startCapture" class="control-button">Start Screen Capture</button>
+    <button id="startARBtn" class="control-button">Start AR Camera</button>
+    <button id="removeBgBtn" class="control-button">Remove Background</button>
+    <input type="file" id="uploadImage" accept="image/*">
 
-  <!-- File input for uploading the image -->
-  <input type="file" id="uploadImage" accept="image/*" />
-  <!-- Button to remove the background -->
-  <button id="removeBgBtn">Remove Background</button>
-  <!-- AR Start button -->
-  <button id="startARBtn">Start AR Camera</button>
+    <!-- Screenshot Display -->
+    <img id="screenshotDisplay" alt="Captured Screenshot">
 
-  <script>
-    let uploadedImageUrl = null;
-    let originalFile = null;
+    <!-- AR Scene -->
+    <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: false;" style="display: none;">
+        <a-marker type="pattern" url="pattern-Batman.patt">
+            <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="3" height="6.0" material="shader: flat;"></a-plane>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
 
-    // Handle image upload
-    document.getElementById('uploadImage').addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        originalFile = file;  // Save the original file for processing
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          uploadedImageUrl = e.target.result;
-          // Update the material source of the image plane
-          document.getElementById('imagePlane').setAttribute('material', 'src', uploadedImageUrl);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+    <script>
+        let capturedStream;
+        let capturedImageBlob;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const imagePlane = document.getElementById('imagePlane');
+        const screenshotDisplay = document.getElementById('screenshotDisplay');
+        const startARBtn = document.getElementById('startARBtn');
+        const removeBgBtn = document.getElementById('removeBgBtn');
+        const arScene = document.getElementById('arScene');
 
-    // Handle background removal
-    document.getElementById('removeBgBtn').addEventListener('click', function() {
-      if (!originalFile) {
-        alert("Please upload an image first!");
-        return;
-      }
+        // Screen Capture Functionality
+        document.getElementById('startCapture').addEventListener('click', async () => {
+            try {
+                capturedStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { mediaSource: 'screen' }
+                });
 
-      const formData = new FormData();
-      formData.append('image_file', originalFile);
+                const video = document.createElement('video');
+                video.srcObject = capturedStream;
+                video.play();
 
-      // Use the Remove.bg API (you'll need an API key)
-      fetch('https://api.remove.bg/v1.0/removebg', {
-        method: 'POST',
-        headers: {
-          'X-Api-Key': '69NLDUXP3Ja3SyrzBvP7SYxC'
-        },
-        body: formData
-      })
-      .then(response => response.blob())
-      .then(blob => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          // Update the material source of the image plane with the background-removed image
-          document.getElementById('imagePlane').setAttribute('material', 'src', e.target.result);
-        };
-        reader.readAsDataURL(blob);
-      })
-      .catch(err => {
-        console.error("Background removal failed:", err);
-        alert("Failed to remove background. Please try again later.");
-      });
-    });
+                setTimeout(() => {
+                    captureScreenshot(video);
+                    stopCapture();
+                }, 3000); // Reduced to 3 seconds
 
-    // Start AR button (optional, if you want the AR scene to start after processing)
-    document.getElementById('startARBtn').addEventListener('click', () => {
-      const arScene = document.querySelector('a-scene');
-      arScene.style.display = 'block'; // Show AR scene if the button is clicked
-    });
-  </script>
+            } catch (err) {
+                console.error('Error accessing screen:', err);
+                alert('Unable to capture screen. Please allow permissions.');
+            }
+        });
+
+        function captureScreenshot(video) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+                capturedImageBlob = blob;
+                const screenshotDataURL = canvas.toDataURL('image/png');
+                displayScreenshot(screenshotDataURL);
+            }, 'image/png');
+        }
+
+        function displayScreenshot(dataURL) {
+            screenshotDisplay.src = dataURL;
+            screenshotDisplay.style.display = 'block';
+            startARBtn.style.display = 'block';
+            removeBgBtn.style.display = 'block';
+        }
+
+        function stopCapture() {
+            capturedStream.getTracks().forEach(track => track.stop());
+        }
+
+        // Background Removal Functionality
+        removeBgBtn.addEventListener('click', function() {
+            if (!capturedImageBlob) {
+                alert("Please capture a screenshot first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image_file', capturedImageBlob, 'screenshot.png');
+
+            fetch('https://api.remove.bg/v1.0/removebg', {
+                method: 'POST',
+                headers: {
+                    'X-Api-Key': '69NLDUXP3Ja3SyrzBvP7SYxC'
+                },
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    screenshotDisplay.src = e.target.result;
+                    adjustPlaneSize(e.target.result);
+                };
+                reader.readAsDataURL(blob);
+            })
+            .catch(err => {
+                console.error("Background removal failed:", err);
+                alert("Failed to remove background. Please try again later.");
+            });
+        });
+
+        // AR Functionality
+        startARBtn.addEventListener('click', () => {
+            adjustPlaneSize(screenshotDisplay.src);
+            arScene.style.display = 'block';
+        });
+
+        function adjustPlaneSize(imageSrc) {
+            const img = new Image();
+            img.onload = () => {
+                const aspectRatio = img.width / img.height;
+                imagePlane.setAttribute('width', 2);
+                imagePlane.setAttribute('height', 2 / aspectRatio);
+                imagePlane.setAttribute('material', 'src', imageSrc);
+            };
+            img.src = imageSrc;
+        }
+    </script>
 </body>
 </html>
