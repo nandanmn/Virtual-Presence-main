@@ -3,23 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Screenshot Overlay</title>
+    <title>AR Background Remover and Screenshot Overlay</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        #startCapture, #startARBtn {
+        #uploadImage, #removeBgBtn, #startCapture, #startARBtn {
             position: fixed;
             top: 10px;
-            left: 10px;
-            font-size: 14px;
+            font-size: 16px;
             background-color: #fff;
-            padding: 8px 10px;
+            padding: 5px 10px;
             border: 1px solid #ccc;
             cursor: pointer;
             z-index: 9999;
         }
 
+        #uploadImage {
+            left: 10px;
+        }
+
+        #removeBgBtn {
+            left: auto;
+            right: 10px;
+        }
+
+        #startCapture {
+            top: 50px;
+            left: 10px;
+        }
+
         #startARBtn {
+            top: 90px;
+            left: 10px;
             display: none;
         }
 
@@ -36,22 +51,26 @@
     </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
-    <!-- Buttons -->
-    <button id="startCapture">Start Screen Capture</button>
-    <button id="startARBtn">Start AR Camera</button>
-
-    <!-- Screenshot Display -->
-    <img id="screenshotDisplay" alt="Captured Screenshot">
-
     <!-- AR Scene -->
-    <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: true;" style="display: none;">
+    <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
         <a-marker id="marker" preset="kanji">
             <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" material="shader: flat;"></a-plane>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 
+    <!-- Buttons -->
+    <input type="file" id="uploadImage" accept="image/*" />
+    <button id="removeBgBtn">Background Remover</button>
+    <button id="startCapture">Start Screen Capture</button>
+    <button id="startARBtn">Start AR Camera</button>
+
+    <!-- Screenshot Display -->
+    <img id="screenshotDisplay" alt="Captured Screenshot">
+
     <script>
+        let uploadedImageUrl = null;
+        let originalFile = null;
         let capturedStream;
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -59,6 +78,52 @@
         const screenshotDisplay = document.getElementById('screenshotDisplay');
         const startARBtn = document.getElementById('startARBtn');
         const arScene = document.getElementById('arScene');
+
+        document.getElementById('uploadImage').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                originalFile = file;  // Save the original file for processing
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageUrl = e.target.result;
+                    // Update the material source of the image plane
+                    document.getElementById('imagePlane').setAttribute('material', 'src', uploadedImageUrl);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('removeBgBtn').addEventListener('click', function() {
+            if (!originalFile) {
+                alert("Please upload an image first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image_file', originalFile);
+
+            // Use the Remove.bg API (need an API key)
+            fetch('https://api.remove.bg/v1.0/removebg', {
+                method: 'POST',
+                headers: {
+                    'X-Api-Key': '69NLDUXP3Ja3SyrzBvP7SYxC'
+                },
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Update the material source of the image plane with the background-removed image
+                    document.getElementById('imagePlane').setAttribute('material', 'src', e.target.result);
+                };
+                reader.readAsDataURL(blob);
+            })
+            .catch(err => {
+                console.error("Background removal failed:", err);
+                alert("Failed to remove background. Please try again later.");
+            });
+        });
 
         document.getElementById('startCapture').addEventListener('click', async () => {
             try {
