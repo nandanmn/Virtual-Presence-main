@@ -48,6 +48,20 @@
         #uploadImage {
             display: none;
         }
+        
+        /* Add loading indicator */
+        #loadingIndicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 10000;
+        }
     </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
@@ -56,14 +70,17 @@
     <button id="startARBtn" class="control-button">Start AR Camera</button>
     <button id="removeBgBtn" class="control-button">Remove Background</button>
     <input type="file" id="uploadImage" accept="image/*">
+    
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator">Processing...</div>
 
     <!-- Screenshot Display -->
     <img id="screenshotDisplay" alt="Captured Screenshot">
 
     <!-- AR Scene -->
     <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: false;" style="display: none;">
-        <a-marker type="pattern" url="pattern-Batman.patt">
-            <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="3" height="6.0" material="shader: flat;"></a-plane>
+        <a-marker preset="kanji">
+            <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="1" height="1" material="shader: flat; transparent: true;"></a-plane>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
@@ -78,6 +95,7 @@
         const startARBtn = document.getElementById('startARBtn');
         const removeBgBtn = document.getElementById('removeBgBtn');
         const arScene = document.getElementById('arScene');
+        const loadingIndicator = document.getElementById('loadingIndicator');
 
         // Screen Capture Functionality
         document.getElementById('startCapture').addEventListener('click', async () => {
@@ -93,7 +111,7 @@
                 setTimeout(() => {
                     captureScreenshot(video);
                     stopCapture();
-                }, 3000); // Reduced to 3 seconds
+                }, 3000); // 3 second delay
 
             } catch (err) {
                 console.error('Error accessing screen:', err);
@@ -131,6 +149,7 @@
                 return;
             }
 
+            loadingIndicator.style.display = 'block';
             const formData = new FormData();
             formData.append('image_file', capturedImageBlob, 'screenshot.png');
 
@@ -147,28 +166,48 @@
                 reader.onload = function(e) {
                     screenshotDisplay.src = e.target.result;
                     adjustPlaneSize(e.target.result);
+                    loadingIndicator.style.display = 'none';
                 };
                 reader.readAsDataURL(blob);
             })
             .catch(err => {
                 console.error("Background removal failed:", err);
                 alert("Failed to remove background. Please try again later.");
+                loadingIndicator.style.display = 'none';
             });
         });
 
         // AR Functionality
         startARBtn.addEventListener('click', () => {
-            adjustPlaneSize(screenshotDisplay.src);
-            arScene.style.display = 'block';
+            if (screenshotDisplay.src) {
+                arScene.style.display = 'block';
+                adjustPlaneSize(screenshotDisplay.src);
+            } else {
+                alert('Please capture a screenshot first!');
+            }
         });
 
         function adjustPlaneSize(imageSrc) {
             const img = new Image();
             img.onload = () => {
                 const aspectRatio = img.width / img.height;
-                imagePlane.setAttribute('width', 2);
-                imagePlane.setAttribute('height', 2 / aspectRatio);
-                imagePlane.setAttribute('material', 'src', imageSrc);
+                const baseSize = 1; // Base size for the plane
+                
+                if (aspectRatio > 1) {
+                    // Landscape image
+                    imagePlane.setAttribute('width', baseSize);
+                    imagePlane.setAttribute('height', baseSize / aspectRatio);
+                } else {
+                    // Portrait image
+                    imagePlane.setAttribute('width', baseSize * aspectRatio);
+                    imagePlane.setAttribute('height', baseSize);
+                }
+                
+                imagePlane.setAttribute('material', {
+                    src: imageSrc,
+                    transparent: true,
+                    shader: 'flat'
+                });
             };
             img.src = imageSrc;
         }
