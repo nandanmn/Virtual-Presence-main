@@ -7,31 +7,53 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
+        /* General Styling */
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background: url('https://source.unsplash.com/1600x900/?city') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+        }
+
+        h1 {
+            font-size: 3em;
+            font-weight: bold;
+            text-align: center;
+            color: #fff;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+            margin-bottom: 30px;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
         .control-button {
-            position: fixed;
-            font-size: 14px;
-            background-color: #fff;
-            padding: 8px 10px;
-            border: 1px solid #ccc;
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
-            z-index: 9999;
+            transition: all 0.3s ease;
         }
 
-        #startCapture {
-            top: 10px;
-            left: 10px;
+        .control-button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
         }
 
-        #startARBtn {
-            top: 10px;
-            left: 150px;
-            display: none;
-        }
-
-        #removeBgBtn {
-            top: 10px;
-            left: 290px;
-            display: none;
+        .control-button:active {
+            transform: scale(0.98);
         }
 
         #screenshotDisplay {
@@ -40,20 +62,57 @@
             left: 10px;
             max-width: 150px;
             max-height: 150px;
-            border: 2px solid #ccc;
+            border: 2px solid #fff;
             display: none;
-            z-index: 9999;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #startARBtn {
+            display: none;
+        }
+
+        .content {
+            text-align: center;
+            z-index: 10;
+            position: absolute;
+        }
+
+        .card {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+            display: inline-block;
+            text-align: center;
+        }
+
+        .card button {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        
+        .card h2 {
+            margin-bottom: 20px;
+            font-size: 2em;
         }
     </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
-    <!-- Control Buttons -->
-    <button id="startCapture" class="control-button">Start Screen Capture</button>
-    <button id="startARBtn" class="control-button">Start AR Camera</button>
-    <button id="removeBgBtn" class="control-button">Remove Background</button>
-
-    <!-- Screenshot Display -->
-    <img id="screenshotDisplay" alt="Captured Screenshot">
+<body>
+    <div class="content">
+        <div class="card">
+            <h1>Batman AR Experience</h1>
+            <h2>Capture Your Moment in Augmented Reality</h2>
+            <!-- Control Buttons -->
+            <div class="control-buttons">
+                <button id="startCapture" class="control-button">Capture Photo</button>
+                <button id="startARBtn" class="control-button">Start AR Camera</button>
+                <button id="removeBgBtn" class="control-button">Remove Background</button>
+            </div>
+            <!-- Screenshot Display -->
+            <img id="screenshotDisplay" alt="Captured Screenshot">
+        </div>
+    </div>
 
     <!-- AR Scene -->
     <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: false;" style="display: none;">
@@ -75,25 +134,25 @@
         const removeBgBtn = document.getElementById('removeBgBtn');
         const arScene = document.getElementById('arScene');
 
-        // Screen Capture Functionality
+        // Camera Capture Functionality
         document.getElementById('startCapture').addEventListener('click', async () => {
             try {
-                capturedStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: { mediaSource: 'screen' }
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" } // Accessing the back camera
                 });
 
                 const video = document.createElement('video');
-                video.srcObject = capturedStream;
+                video.srcObject = stream;
                 video.play();
 
                 setTimeout(() => {
                     captureScreenshot(video);
-                    stopCapture();
-                }, 3000); // 3 second delay
+                    stopCapture(stream);
+                }, 3000); // 3 second delay for capturing photo
 
             } catch (err) {
-                console.error('Error accessing screen:', err);
-                alert('Unable to capture screen. Please allow permissions.');
+                console.error('Error accessing camera:', err);
+                alert('Unable to capture image. Please allow camera permissions.');
             }
         });
 
@@ -116,8 +175,8 @@
             removeBgBtn.style.display = 'block';
         }
 
-        function stopCapture() {
-            capturedStream.getTracks().forEach(track => track.stop());
+        function stopCapture(stream) {
+            stream.getTracks().forEach(track => track.stop());
         }
 
         // AR Functionality
@@ -129,7 +188,7 @@
                 // Dynamically Set Plane Texture
                 adjustPlaneSize(screenshotDisplay.src);
             } else {
-                alert('Please capture a screenshot first!');
+                alert('Please capture a photo first!');
             }
         });
 
