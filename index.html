@@ -115,10 +115,14 @@
     </div>
 
     <!-- AR Scene -->
-    <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: false;" style="display: none;">
-        <!-- Custom Marker -->
+    <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: true; markerAreaEnabled: true;" style="display: none;">
+        <!-- Custom Marker with fallback -->
         <a-marker type="pattern" url="pattern-Batman.patt">
             <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="1" height="1" material="shader: flat; transparent: true;"></a-plane>
+        </a-marker>
+        <!-- Default Fallback Marker -->
+        <a-marker type="pattern" url="https://raw.githubusercontent.com/AR-js-org/AR.js/master/aframe/examples/marker-training/examples/pattern-files/pattern-hiro.patt" visible="false">
+            <a-plane id="fallbackPlane" position="0 0 0" rotation="-90 0 0" width="1" height="1" material="shader: flat; transparent: true;"></a-plane>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
