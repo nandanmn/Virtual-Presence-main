@@ -1,223 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom AR with Batman Marker</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <style>
-        /* General Styling */
-        body {
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            overflow: hidden;
-            background: url('https://source.unsplash.com/1600x900/?city') no-repeat center center fixed;
-            background-size: cover;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #fff;
-        }
+  <title>AR Image Editor</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <style>
+    /* General Reset */
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+    }
 
-        h1 {
-            font-size: 3em;
-            font-weight: bold;
-            text-align: center;
-            color: #fff;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
-            margin-bottom: 30px;
-        }
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: #3a3f58;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
 
-        .control-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
+    header h1 {
+      color: #fff;
+      font-size: 20px;
+      margin: 0;
+    }
 
-        .control-button {
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+    /* Buttons and File Input */
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
 
-        .control-button:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
+    .action-buttons input[type="file"],
+    .action-buttons button {
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
 
-        .control-button:active {
-            transform: scale(0.98);
-        }
+    .action-buttons input[type="file"] {
+      background-color: #f7f7f7;
+      color: #333;
+      border: 1px solid #ccc;
+      width: auto;
+    }
 
-        #screenshotDisplay {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            max-width: 150px;
-            max-height: 150px;
-            border: 2px solid #fff;
-            display: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
+    .action-buttons input[type="file"]::-webkit-file-upload-button {
+      padding: 0;
+      border: none;
+      background: none;
+      font-weight: bold;
+      color: #007BFF;
+      cursor: pointer;
+    }
 
-        #startARBtn {
-            display: none;
-        }
+    .action-buttons button {
+      background-color: #007BFF;
+      color: white;
+      transition: background-color 0.3s;
+    }
 
-        .content {
-            text-align: center;
-            z-index: 10;
-            position: absolute;
-        }
+    .action-buttons button:hover {
+      background-color: #0056b3;
+    }
 
-        .card {
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-            display: inline-block;
-            text-align: center;
-        }
+    /* AR Scene Style */
+    a-scene {
+      height: 100vh;
+      margin-top: 60px; /* To avoid overlap with header */
+    }
 
-        .card button {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-        
-        .card h2 {
-            margin-bottom: 20px;
-            font-size: 2em;
-        }
-    </style>
+    /* Loading Overlay */
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px 30px;
+      font-size: 18px;
+      border-radius: 10px;
+      z-index: 1000;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <div class="content">
-        <div class="card">
-            <h1>Batman AR Experience</h1>
-            <h2>Capture Your Moment in Augmented Reality</h2>
-            <!-- Control Buttons -->
-            <div class="control-buttons">
-                <button id="startCapture" class="control-button">Capture Photo</button>
-                <button id="startARBtn" class="control-button">Start AR Camera</button>
-                <button id="removeBgBtn" class="control-button">Remove Background</button>
-            </div>
-            <!-- Screenshot Display -->
-            <img id="screenshotDisplay" alt="Captured Screenshot">
-        </div>
+  <!-- Header Section -->
+  <header>
+    <h1>AR Image Editor</h1>
+    <div class="action-buttons">
+      <!-- File input for uploading the image -->
+      <input type="file" id="uploadImage" accept="image/*" />
+      <!-- Button to remove the background -->
+      <button id="removeBgBtn">Remove Background</button>
     </div>
+  </header>
 
-    <!-- AR Scene -->
-    <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: true; markerAreaEnabled: true;" style="display: none;">
-        <!-- Custom Marker with fallback -->
-        <a-marker type="pattern" url="pattern-Batman.patt">
-            <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="1" height="1" material="shader: flat; transparent: true;"></a-plane>
-        </a-marker>
-        <!-- Default Fallback Marker -->
-        <a-marker type="pattern" url="https://raw.githubusercontent.com/AR-js-org/AR.js/master/aframe/examples/marker-training/examples/pattern-files/pattern-hiro.patt" visible="false">
-            <a-plane id="fallbackPlane" position="0 0 0" rotation="-90 0 0" width="1" height="1" material="shader: flat; transparent: true;"></a-plane>
-        </a-marker>
-        <a-entity camera></a-entity>
-    </a-scene>
+  <!-- AR Scene -->
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <!-- Marker for tracking -->
+    <a-marker type="pattern" url="pattern-Batman.patt">
+      <!-- Plane to display the uploaded image -->
+      <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="3" height="6.0" material="shader: flat;"></a-plane>
+    </a-marker>
+    <!-- Camera to view the scene -->
+    <a-entity camera></a-entity>
+  </a-scene>
 
-    <script>
-        let capturedStream;
-        let capturedImageBlob;
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const imagePlane = document.getElementById('imagePlane');
-        const screenshotDisplay = document.getElementById('screenshotDisplay');
-        const startARBtn = document.getElementById('startARBtn');
-        const removeBgBtn = document.getElementById('removeBgBtn');
-        const arScene = document.getElementById('arScene');
+  <!-- Loading Overlay -->
+  <div id="loading">Processing your image...</div>
 
-        // Camera Capture Functionality
-        document.getElementById('startCapture').addEventListener('click', async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment" } // Accessing the back camera
-                });
+  <script>
+    let uploadedImageUrl = null;
+    let originalFile = null;
 
-                const video = document.createElement('video');
-                video.srcObject = stream;
-                video.play();
+    document.getElementById('uploadImage').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        originalFile = file; // Save the original file for processing
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadedImageUrl = e.target.result;
+          // Update the material source of the image plane
+          document.getElementById('imagePlane').setAttribute('material', 'src', uploadedImageUrl);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
-                setTimeout(() => {
-                    captureScreenshot(video);
-                    stopCapture(stream);
-                }, 3000); // 3 second delay for capturing photo
+    document.getElementById('removeBgBtn').addEventListener('click', function() {
+      if (!originalFile) {
+        alert("Please upload an image first!");
+        return;
+      }
 
-            } catch (err) {
-                console.error('Error accessing camera:', err);
-                alert('Unable to capture image. Please allow camera permissions.');
-            }
+      // Show loading spinner
+      document.getElementById('loading').style.display = 'block';
+
+      const formData = new FormData();
+      formData.append('image_file', originalFile);
+
+      // Use the Remove.bg API (you'll need an API key)
+      fetch('https://api.remove.bg/v1.0/removebg', {
+        method: 'POST',
+        headers: {
+          'X-Api-Key': 'YOUR_API_KEY' // Replace with your API key
+        },
+        body: formData
+      })
+        .then(response => response.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            // Hide loading spinner
+            document.getElementById('loading').style.display = 'none';
+
+            // Update the material source of the image plane with the background-removed image
+            document.getElementById('imagePlane').setAttribute('material', 'src', e.target.result);
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch(err => {
+          console.error("Background removal failed:", err);
+          alert("Failed to remove background. Please try again later.");
+          // Hide loading spinner
+          document.getElementById('loading').style.display = 'none';
         });
-
-        function captureScreenshot(video) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob((blob) => {
-                capturedImageBlob = blob;
-                const screenshotDataURL = canvas.toDataURL('image/png');
-                displayScreenshot(screenshotDataURL);
-            }, 'image/png');
-        }
-
-        function displayScreenshot(dataURL) {
-            screenshotDisplay.src = dataURL;
-            screenshotDisplay.style.display = 'block';
-            startARBtn.style.display = 'block';
-            removeBgBtn.style.display = 'block';
-        }
-
-        function stopCapture(stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
-
-        // AR Functionality
-        startARBtn.addEventListener('click', () => {
-            if (screenshotDisplay.src) {
-                // Show AR Scene
-                arScene.style.display = 'block';
-
-                // Dynamically Set Plane Texture
-                adjustPlaneSize(screenshotDisplay.src);
-            } else {
-                alert('Please capture a photo first!');
-            }
-        });
-
-        function adjustPlaneSize(imageSrc) {
-            const img = new Image();
-            img.onload = () => {
-                const aspectRatio = img.width / img.height;
-                const baseSize = 1;
-
-                if (aspectRatio > 1) {
-                    imagePlane.setAttribute('width', baseSize);
-                    imagePlane.setAttribute('height', baseSize / aspectRatio);
-                } else {
-                    imagePlane.setAttribute('width', baseSize * aspectRatio);
-                    imagePlane.setAttribute('height', baseSize);
-                }
-
-                imagePlane.setAttribute('material', {
-                    src: imageSrc,
-                    transparent: true,
-                    shader: 'flat'
-                });
-            };
-            img.src = imageSrc;
-        }
-    </script>
+    });
+  </script>
 </body>
 </html>
