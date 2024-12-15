@@ -4,13 +4,119 @@
   <title>AR Image Editor</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <!-- Keep your existing CSS -->
   <style>
-    /* Your existing styles remain the same */
+    /* General Reset */
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Navigation Bar */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: #3a3f58;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 1000;
+    }
+
+    nav h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav ul li {
+      margin-left: 20px;
+    }
+
+    nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    nav ul li a:hover {
+      color: #007BFF;
+    }
+
+    /* Pages */
+    .page {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding-top: 80px;
+    }
+
+    .active {
+      display: flex !important;
+    }
+
+    #aboutPage {
+      background-color: #f4f4f4;
+      color: #333;
+      text-align: center;
+    }
+
+    #aboutPage h2 {
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    #aboutPage p {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* AR Controls */
+    #arControls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    #uploadImage, #removeBgBtn {
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #removeBgBtn {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    #removeBgBtn:hover {
+      background-color: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <!-- Navigation Bar remains the same -->
+  <!-- Navigation Bar -->
   <nav>
     <h1>AR Image Editor</h1>
     <ul>
@@ -20,32 +126,36 @@
     </ul>
   </nav>
 
-  <!-- Homepage and About Page remain the same -->
+  <!-- Homepage -->
   <div id="homepage" class="page">
     <h2>Choose an Option</h2>
     <button onclick="showPage('arView')">Open AR Camera</button>
   </div>
 
+  <!-- About Page -->
   <div id="aboutPage" class="page">
-    <!-- Your existing about page content -->
+    <h2>About the Developers</h2>
+    <p>
+      <strong>Designed And Developed By:</strong><br>
+      Nagaraju P<br>
+      Nandan M N<br>
+      Amith H Nithyundil<br>
+      Akash Ravindra Nilkund<br>
+    </p>
+    <p>
+      <strong>Under the Guidance of:</strong><br>
+      Mr. DEEPAK P<br>
+      Assistant Professor<br>
+      Dept. of CS & Engineering<br>
+      NIEIT, Mysore<br>
+    </p>
   </div>
 
-  <!-- Modified AR View -->
+  <!-- AR View -->
   <div id="arView" class="page">
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-      <a-assets>
-        <img id="uploaded-image" crossorigin="anonymous">
-      </a-assets>
-      
       <a-marker type="pattern" url="pattern-Batman.patt">
-        <a-plane 
-          id="imagePlane" 
-          position="0 0 0" 
-          rotation="-90 0 0" 
-          width="2" 
-          height="2"
-          material="shader: flat; transparent: true; side: double"
-        ></a-plane>
+        <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="3" height="6.0" material="shader: flat;"></a-plane>
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
@@ -57,61 +167,37 @@
   </div>
 
   <script>
-    // Page navigation function remains the same
+    // Function to toggle pages
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
       document.getElementById(pageId).classList.add('active');
     }
 
-    // Modified AR functionalities
-    const imagePlane = document.getElementById('imagePlane');
-    const uploadedImageAsset = document.getElementById('uploaded-image');
+    // AR functionality
+    let uploadedImageUrl = null;
+    let originalFile = null;
 
-    // Modified upload image handler
     document.getElementById('uploadImage').addEventListener('change', function(event) {
       const file = event.target.files[0];
       if (file) {
+        originalFile = file;
         const reader = new FileReader();
         reader.onload = function(e) {
-          // First update the asset
-          uploadedImageAsset.src = e.target.result;
-          
-          // Wait for the image to load before updating the plane
-          uploadedImageAsset.onload = function() {
-            const aspect = uploadedImageAsset.width / uploadedImageAsset.height;
-            
-            // Update the plane's dimensions to match the image aspect ratio
-            if (aspect > 1) {
-              imagePlane.setAttribute('width', 2);
-              imagePlane.setAttribute('height', 2 / aspect);
-            } else {
-              imagePlane.setAttribute('width', 2 * aspect);
-              imagePlane.setAttribute('height', 2);
-            }
-            
-            // Update the material
-            imagePlane.setAttribute('material', {
-              shader: 'flat',
-              src: '#uploaded-image',
-              transparent: true,
-              side: 'double'
-            });
-          };
+          uploadedImageUrl = e.target.result;
+          document.getElementById('imagePlane').setAttribute('material', 'src', uploadedImageUrl);
         };
         reader.readAsDataURL(file);
       }
     });
 
-    // Modified background removal handler
     document.getElementById('removeBgBtn').addEventListener('click', function() {
-      const fileInput = document.getElementById('uploadImage');
-      if (!fileInput.files[0]) {
+      if (!originalFile) {
         alert("Please upload an image first!");
         return;
       }
 
       const formData = new FormData();
-      formData.append('image_file', fileInput.files[0]);
+      formData.append('image_file', originalFile);
 
       fetch('https://api.remove.bg/v1.0/removebg', {
         method: 'POST',
@@ -122,34 +208,15 @@
       })
       .then(response => response.blob())
       .then(blob => {
-        const url = URL.createObjectURL(blob);
-        uploadedImageAsset.src = url;
-        
-        // Wait for the new image to load
-        uploadedImageAsset.onload = function() {
-          const aspect = uploadedImageAsset.width / uploadedImageAsset.height;
-          
-          // Update plane dimensions
-          if (aspect > 1) {
-            imagePlane.setAttribute('width', 2);
-            imagePlane.setAttribute('height', 2 / aspect);
-          } else {
-            imagePlane.setAttribute('width', 2 * aspect);
-            imagePlane.setAttribute('height', 2);
-          }
-          
-          // Update material
-          imagePlane.setAttribute('material', {
-            shader: 'flat',
-            src: '#uploaded-image',
-            transparent: true,
-            side: 'double'
-          });
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('imagePlane').setAttribute('material', 'src', e.target.result);
         };
+        reader.readAsDataURL(blob);
       })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to remove background. Please try again.');
+      .catch(err => {
+        console.error("Background removal failed:", err);
+        alert("Failed to remove background. Please try again later.");
       });
     });
   </script>
