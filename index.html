@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AR Experience</title>
+  <title>AR Image Editor</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
@@ -149,7 +149,7 @@
 <body>
   <!-- Navigation Bar -->
   <nav>
-    <h1>AR Experience</h1>
+    <h1>AR Image Editor</h1>
     <ul>
       <li><a onclick="showPage('homepage')">Home</a></li>
       <li><a onclick="showPage('aboutPage')">About</a></li>
@@ -165,9 +165,6 @@
 
   <!-- About Page -->
   <div id="aboutPage" class="page">
-    <br>
-    <br>
-    <br>
     <h2>About the Developers</h2>
     <p>
       <strong>Designed And Developed By:</strong><br>
@@ -189,7 +186,7 @@
   <div id="arView" class="page">
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
       <a-marker type="pattern" url="pattern-Batman.patt">
-        <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="3" height="6.0" material="shader: flat;"></a-plane>
+        <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="3" height="6.0"></a-plane>
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
@@ -269,7 +266,6 @@
 
     // Update image plane material
     function updateImagePlane(imageUrl) {
-      imagePlane.removeAttribute('material'); // Clear existing material
       imagePlane.setAttribute('material', `shader: flat; src: ${imageUrl}`); // Set new image material
     }
   </script>
