@@ -157,15 +157,15 @@
       left: 0 !important;
     }
     #aboutPage {
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      padding-top: 80px;
-      background-color: #f5ebeb;
-      color: #333;
-      text-align: center;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        padding-top: 80px;
+        background-color: #f5ebeb;
+        color: #333;
+        text-align: center;
     }
     #aboutPage h2 {
       font-size: 24px;
@@ -178,37 +178,34 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     .highlight {
-      font-weight: bold;
-      font-size: 24px;
-      color: #ffffff;
-      text-decoration: none;
+        font-weight: bold;
+        font-size: 24px;
+        color: #ffffff;
+        text-decoration: none;
     }
     .shutter-btn {
       position: fixed;
-      right: 20px; /* Changed from left to right */
+      right: 20px;
       top: 50%;
       transform: translateY(-50%);
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background-color: #ff4444;
-      border: 4px solid white;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      background-color: rgba(255, 255, 255, 0.7);
+      border: 3px solid #007BFF;
+      font-size: 24px;
+      color: #007BFF;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       cursor: pointer;
       z-index: 2000;
-      transition: transform 0.2s, background-color 0.2s;
-      display: none;
+      transition: background-color 0.3s, color 0.3s;
     }
+
     .shutter-btn:hover {
-      transform: translateY(-50%) scale(1.1);
-      background-color: #ff2222;
-    }
-    .shutter-btn:active {
-      transform: translateY(-50%) scale(0.95);
-      background-color: #cc0000;
-    }
-    .ar-subpage.active .shutter-btn {
-      display: block;
+      background-color: #007BFF;
+      color: white;
     }
   </style>
 </head>
@@ -230,21 +227,21 @@
     <div id="arScreenSharePage" class="ar-subpage">
       <div class="flash"></div>
       <video id="sharedScreenPreview" autoplay muted></video>
-      <button class="shutter-btn" id="screenShareShutter" title="Take Photo"></button>
       <div id="arControls">
         <button id="startShareBtn" class="btn">Start Screen Share</button>
         <button id="captureBtn" class="btn" disabled>Capture Screen</button>
       </div>
+      <button id="screenShareShutterBtn" class="shutter-btn">📷</button>
     </div>
 
     <div id="imageUploadPage" class="ar-subpage">
       <div class="flash"></div>
-      <button class="shutter-btn" id="imageUploadShutter" title="Take Photo"></button>
       <div id="imageUploadControls">
         <input type="file" id="uploadImage" accept="image/*" style="display: none;">
         <label for="uploadImage" class="btn">Upload Image</label>
         <button id="removeBgBtn" class="btn" disabled>Remove Background</button>
       </div>
+      <button id="imageUploadShutterBtn" class="shutter-btn">📷</button>
     </div>
     
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 4x4;">
@@ -374,36 +371,6 @@
       }
     }
 
-    function saveScreenshot(dataUrl) {
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `ar-capture-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function captureARScene() {
-      if (!markerVisible) {
-        alert('Please ensure the marker is visible before capturing.');
-        return;
-      }
-
-      const canvas = document.querySelector('.a-canvas');
-      const flash = document.querySelector('.flash');
-      
-      flash.classList.add('active');
-      setTimeout(() => flash.classList.remove('active'), 200);
-
-      try {
-        const dataUrl = canvas.toDataURL('image/png');
-        saveScreenshot(dataUrl);
-      } catch (error) {
-        console.error('Error capturing AR scene:', error);
-        alert('Failed to capture photo. Please try again.');
-      }
-    }
-
     const uploadImage = document.getElementById('uploadImage');
     const removeBgBtn = document.getElementById('removeBgBtn');
     let originalFile = null;
@@ -451,9 +418,29 @@
       });
     });
 
-    // Add event listeners for shutter buttons
-    document.getElementById('screenShareShutter').addEventListener('click', captureARScene);
-    document.getElementById('imageUploadShutter').addEventListener('click', captureARScene);
+    const screenShareShutterBtn = document.getElementById('screenShareShutterBtn');
+    const imageUploadShutterBtn = document.getElementById('imageUploadShutterBtn');
+
+    function capturePhoto() {
+      if (!markerVisible) {
+        alert('Please ensure the marker is visible before capturing.');
+        return;
+      }
+
+      const canvas = document.querySelector('canvas');
+      const dataURL = canvas.toDataURL('image/png');
+
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = 'ar-capture.png';
+      link.click();
+
+      document.querySelector('.flash').classList.add('active');
+      setTimeout(() => document.querySelector('.flash').classList.remove('active'), 200);
+    }
+
+    screenShareShutterBtn.addEventListener('click', capturePhoto);
+    imageUploadShutterBtn.addEventListener('click', capturePhoto);
 
     window.onload = function() {
       showPage('homepage');
@@ -461,3 +448,4 @@
   </script>
 </body>
 </html>
+
