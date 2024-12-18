@@ -1,18 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AR Experience</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
-    /* General Reset */
     body {
       margin: 0;
       font-family: 'Arial', sans-serif;
       overflow: hidden;
     }
-
-    /* Navigation Bar */
     nav {
       position: fixed;
       top: 0;
@@ -27,24 +26,27 @@
       padding: 0 20px;
       z-index: 1000;
       backdrop-filter: blur(5px);
+      box-sizing: border-box;
     }
-
     nav h1 {
       margin: 0;
       font-size: 20px;
     }
-
     nav ul {
       list-style: none;
       display: flex;
       margin: 0;
       padding: 0;
+      align-items: center;
+      flex-grow: 1;
+      justify-content: flex-end;
     }
-
     nav ul li {
       margin-left: 20px;
     }
-
+    nav ul li:last-child {
+      margin-left: auto;
+    }
     nav ul li a {
       color: white;
       text-decoration: none;
@@ -52,12 +54,9 @@
       cursor: pointer;
       transition: color 0.3s;
     }
-
     nav ul li a:hover {
       color: #007BFF;
     }
-
-    /* Pages */
     .page {
       display: none;
       position: absolute;
@@ -65,93 +64,50 @@
       height: 100%;
       top: 0;
       left: 0;
+      padding-top: 60px;
+      box-sizing: border-box;
     }
-
     .active {
       display: block !important;
     }
-
-    #homepage {
-      top: 50px;
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('/api/placeholder/1920/1080');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      color: white;
-      text-align: center;
-    }
-
-    #homepage h2 {
-      font-size: 3rem;
-      margin-bottom: 2rem;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    }
-
-    #homepage button {
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      background-color: #007BFF;
-      color: white;
+    .btn {
+      padding: 12px 24px;
       border: none;
-      border-radius: 30px;
+      border-radius: 25px;
+      font-size: 16px;
       cursor: pointer;
       transition: transform 0.3s, background-color 0.3s;
-      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      margin: 10px;
     }
-
-    #homepage button:hover {
-      transform: translateY(-2px);
-      background-color: #0056b3;
-    }
-
-    /* About Page */
-    #aboutPage {
-      display: none;
+    #homepage {
+      text-decoration: solid;
+      display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      padding-top: 80px;
-      background-color: #f4f4f4;
-      color: #333;
+      color: black;
       text-align: center;
     }
-
-    #aboutPage h2 {
-      margin-bottom: 20px;
-      font-size: 28px;
+    #arPageContainer {
+      position: relative;
+      height: 100vh;
+      width: 100vw;
     }
-
-    #aboutPage p {
-      font-size: 18px;
-      line-height: 1.6;
-    }
-
-    /* AR View */
-    #arView {
-      position: fixed;
+    .ar-subpage {
+      display: none;
+      position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 1;
+      z-index: 10;
     }
-
-    #arView.active {
-      display: block !important;
+    .ar-subpage.active {
+      display: block;
     }
-
-    .a-enter-vr {
-      display: none;
-    }
-
-    /* AR Controls */
-    #arControls {
+    #arControls, #imageUploadControls {
       position: fixed;
       bottom: 20px;
       left: 50%;
@@ -160,54 +116,24 @@
       gap: 15px;
       z-index: 2000;
     }
-
-    #uploadImage, #removeBgBtn {
-      background: white;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 2000;
-    }
-
-    #removeBgBtn {
-      background-color: #007BFF;
-      color: white;
-    }
-
-    #removeBgBtn:hover {
-      background-color: #0056b3;
-    }
-
-    /* New Capture Button Styles */
-    #captureButton {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 12px 24px;
+    #imageUploadControls .btn {
       background-color: #28a745;
       color: white;
-      border: none;
-      border-radius: 25px;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 2000;
-      display: none;
-      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-      transition: transform 0.3s, background-color 0.3s;
+      transition: background-color 0.3s;
     }
-
-    #captureButton:hover {
+    #imageUploadControls .btn:hover {
       background-color: #218838;
-      transform: translateX(-50%) scale(1.05);
     }
-
-    #captureButton.visible {
-      display: block;
+    #sharedScreenPreview {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      max-width: 200px;
+      max-height: 150px;
+      border: 2px solid #007BFF;
+      z-index: 2001;
     }
-
-    /* Flash effect */
     .flash {
       position: fixed;
       top: 0;
@@ -220,11 +146,9 @@
       pointer-events: none;
       transition: opacity 0.1s;
     }
-
     .flash.active {
       opacity: 1;
     }
-
     .a-canvas {
       width: 100% !important;
       height: 100% !important;
@@ -232,98 +156,272 @@
       top: 0 !important;
       left: 0 !important;
     }
+    #aboutPage {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding-top: 80px;
+      background-color: #f5ebeb;
+      color: #333;
+      text-align: center;
+    }
+    #aboutPage h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    #aboutPage .content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .highlight {
+      font-weight: bold;
+      font-size: 24px;
+      color: #ffffff;
+      text-decoration: none;
+    }
+    .shutter-btn {
+      position: fixed;
+      right: 20px; /* Changed from left to right */
+      top: 50%;
+      transform: translateY(-50%);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #ff4444;
+      border: 4px solid white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      z-index: 2000;
+      transition: transform 0.2s, background-color 0.2s;
+      display: none;
+    }
+    .shutter-btn:hover {
+      transform: translateY(-50%) scale(1.1);
+      background-color: #ff2222;
+    }
+    .shutter-btn:active {
+      transform: translateY(-50%) scale(0.95);
+      background-color: #cc0000;
+    }
+    .ar-subpage.active .shutter-btn {
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <!-- Navigation Bar -->
   <nav>
-    <h1>AR Experience</h1>
     <ul>
-      <li><a onclick="showPage('homepage')">Home</a></li>
+      <li><a class="highlight" onclick="showPage('homepage')">AR Experience</a></li>
+      <li><a onclick="showARPage('arScreenSharePage')">Screen Share AR</a></li>
+      <li><a onclick="showARPage('imageUploadPage')">Image Upload AR</a></li>
       <li><a onclick="showPage('aboutPage')">About</a></li>
-      <li><a onclick="showPage('arView')">AR Camera</a></li>
     </ul>
   </nav>
 
-  <!-- Homepage -->
   <div id="homepage" class="page active">
-    <h2>Welcome to AR Experience</h2>
-    <button onclick="showPage('arView')">Open AR Camera</button>
+    <!-- Empty homepage as requested -->
   </div>
 
-  <!-- About Page -->
-  <div id="aboutPage" class="page">
-    <h2>About the Developers</h2>
-    <p>
-      <strong>Designed And Developed By:</strong><br>
-      Nagaraju P<br>
-      Nandan M N<br>
-      Amith H Nithyundil<br>
-      Akash Ravindra Nilkund<br>
-    </p>
-    <p>
-      <strong>Under the Guidance of:</strong><br>
-      Mr. DEEPAK P<br>
-      Assistant Professor<br>
-      Dept. of CS & Engineering<br>
-      NIEIT, Mysore<br>
-    </p>
-  </div>
+  <div id="arPageContainer" class="page">
+    <div id="arScreenSharePage" class="ar-subpage">
+      <div class="flash"></div>
+      <video id="sharedScreenPreview" autoplay muted></video>
+      <button class="shutter-btn" id="screenShareShutter" title="Take Photo"></button>
+      <div id="arControls">
+        <button id="startShareBtn" class="btn">Start Screen Share</button>
+        <button id="captureBtn" class="btn" disabled>Capture Screen</button>
+      </div>
+    </div>
 
-  <!-- AR View -->
-  <div id="arView" class="page">
-    <div class="flash"></div>
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+    <div id="imageUploadPage" class="ar-subpage">
+      <div class="flash"></div>
+      <button class="shutter-btn" id="imageUploadShutter" title="Take Photo"></button>
+      <div id="imageUploadControls">
+        <input type="file" id="uploadImage" accept="image/*" style="display: none;">
+        <label for="uploadImage" class="btn">Upload Image</label>
+        <button id="removeBgBtn" class="btn" disabled>Remove Background</button>
+      </div>
+    </div>
+    
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 4x4;">
       <a-marker type="pattern" url="pattern-Batman.patt" id="arMarker">
-        <a-plane id="imagePlane" position="0 0 0" rotation="-90 0 0" width="3" height="6.0" material="shader: flat; transparent: true;"></a-plane>
+        <a-plane id="arPlane" position="0 0 0" rotation="-90 0 0" width="3" height="6" material="shader: flat; transparent: true;"></a-plane>
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
+  </div>
 
-    <div id="arControls">
-      <input type="file" id="uploadImage" accept="image/*">
-      <button id="removeBgBtn">Remove Background</button>
+  <div id="aboutPage" class="page">
+    <div class="content">
+      <h2>About the Developers</h2>
+      <p>
+        <strong>Designed And Developed By:</strong><br>
+        Nagaraju P<br>
+        Nandan M N<br>
+        Amith H Nithyundil<br>
+        Akash Ravindra Nilkund<br>
+      </p>
+      <br>
+      <p>
+        <strong>Under the Guidance of:</strong><br>
+        Mr. DEEPAK P<br>
+        Assistant Professor<br>
+        Dept. of CS & Engineering<br>
+        NIEIT, Mysore<br>
+      </p>
     </div>
-    
-    <button id="captureButton">Capture AR Scene</button>
   </div>
 
   <script>
-    // Function to toggle pages
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
       document.getElementById(pageId).classList.add('active');
-      
-      // Ensure AR view takes full screen when active
-      if (pageId === 'arView') {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'auto';
+    }
+
+    function showARPage(subPageId) {
+      showPage('arPageContainer');
+      document.querySelectorAll('.ar-subpage').forEach(subPage => subPage.classList.remove('active'));
+      document.getElementById(subPageId).classList.add('active');
+    }
+
+    const arMarker = document.getElementById('arMarker');
+    let markerVisible = false;
+
+    arMarker.addEventListener('markerFound', () => {
+      markerVisible = true;
+    });
+
+    arMarker.addEventListener('markerLost', () => {
+      markerVisible = false;
+    });
+
+    function projectImageOnMarker(imageUrl) {
+      document.getElementById('arPlane').setAttribute('material', {
+        shader: 'flat',
+        src: imageUrl,
+        transparent: true
+      });
+    }
+
+    const startShareBtn = document.getElementById('startShareBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const sharedScreenPreview = document.getElementById('sharedScreenPreview');
+    let screenStream = null;
+
+    startShareBtn.addEventListener('click', async () => {
+      try {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false
+        });
+
+        sharedScreenPreview.srcObject = screenStream;
+        sharedScreenPreview.style.display = 'block';
+        captureBtn.disabled = false;
+
+        screenStream.getVideoTracks()[0].addEventListener('ended', () => {
+          sharedScreenPreview.style.display = 'none';
+          captureBtn.disabled = true;
+          screenStream = null;
+        });
+      } catch (err) {
+        console.error('Screen share error:', err);
+        alert('Screen share failed. Please try again.');
+      }
+    });
+
+    captureBtn.addEventListener('click', () => {
+      if (!markerVisible) {
+        alert('Please ensure the marker is visible before capturing.');
+        return;
+      }
+
+      if (!screenStream) {
+        alert('Please start screen sharing first.');
+        return;
+      }
+
+      captureScreenshot();
+    });
+
+    function captureScreenshot() {
+      try {
+        document.querySelector('.flash').classList.add('active');
+        setTimeout(() => document.querySelector('.flash').classList.remove('active'), 200);
+
+        const videoTrack = screenStream.getVideoTracks()[0];
+        const imageCapture = new ImageCapture(videoTrack);
+
+        imageCapture.grabFrame().then(imageBitmap => {
+          const canvas = document.createElement('canvas');
+          canvas.width = imageBitmap.width;
+          canvas.height = imageBitmap.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(imageBitmap, 0, 0);
+
+          projectImageOnMarker(canvas.toDataURL('image/png'));
+        }).catch(err => {
+          console.error('Screenshot capture failed:', err);
+          alert('Failed to capture screen. Please try again.');
+        });
+      } catch (error) {
+        console.error('Error in screenshot process:', error);
+        alert('Failed to process screenshot. Please try again.');
       }
     }
 
-    // AR functionality
-    let uploadedImageUrl = null;
+    function saveScreenshot(dataUrl) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `ar-capture-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function captureARScene() {
+      if (!markerVisible) {
+        alert('Please ensure the marker is visible before capturing.');
+        return;
+      }
+
+      const canvas = document.querySelector('.a-canvas');
+      const flash = document.querySelector('.flash');
+      
+      flash.classList.add('active');
+      setTimeout(() => flash.classList.remove('active'), 200);
+
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        saveScreenshot(dataUrl);
+      } catch (error) {
+        console.error('Error capturing AR scene:', error);
+        alert('Failed to capture photo. Please try again.');
+      }
+    }
+
+    const uploadImage = document.getElementById('uploadImage');
+    const removeBgBtn = document.getElementById('removeBgBtn');
     let originalFile = null;
 
-    document.getElementById('uploadImage').addEventListener('change', function(event) {
+    uploadImage.addEventListener('change', function(event) {
       const file = event.target.files[0];
       if (file) {
         originalFile = file;
         const reader = new FileReader();
         reader.onload = function(e) {
-          uploadedImageUrl = e.target.result;
-          document.getElementById('imagePlane').setAttribute('material', {
-            shader: 'flat',
-            src: uploadedImageUrl,
-            transparent: true
-          });
+          projectImageOnMarker(e.target.result);
+          removeBgBtn.disabled = false;
         };
         reader.readAsDataURL(file);
       }
     });
 
-    document.getElementById('removeBgBtn').addEventListener('click', function() {
+    removeBgBtn.addEventListener('click', function() {
       if (!originalFile) {
         alert("Please upload an image first!");
         return;
@@ -335,7 +433,7 @@
       fetch('https://api.remove.bg/v1.0/removebg', {
         method: 'POST',
         headers: {
-          'X-Api-Key': '69NLDUXP3Ja3SyrzBvP7SYxC'
+          'X-Api-Key': 'i4un4Meyf3jKZ2XcXbpZnerm'
         },
         body: formData
       })
@@ -343,11 +441,7 @@
       .then(blob => {
         const reader = new FileReader();
         reader.onload = function(e) {
-          document.getElementById('imagePlane').setAttribute('material', {
-            shader: 'flat',
-            src: e.target.result,
-            transparent: true
-          });
+          projectImageOnMarker(e.target.result);
         };
         reader.readAsDataURL(blob);
       })
@@ -357,80 +451,10 @@
       });
     });
 
-    // New Capture Functionality
-    let markerVisible = false;
-    const captureButton = document.getElementById('captureButton');
-    const flash = document.querySelector('.flash');
+    // Add event listeners for shutter buttons
+    document.getElementById('screenShareShutter').addEventListener('click', captureARScene);
+    document.getElementById('imageUploadShutter').addEventListener('click', captureARScene);
 
-    // Detect when marker is found
-    const marker = document.getElementById('arMarker');
-    marker.addEventListener('markerFound', () => {
-      markerVisible = true;
-      captureButton.classList.add('visible');
-    });
-
-    // Detect when marker is lost
-    marker.addEventListener('markerLost', () => {
-      markerVisible = false;
-      captureButton.classList.remove('visible');
-    });
-
-    // Capture functionality
-    captureButton.addEventListener('click', async () => {
-      if (!markerVisible) {
-        alert('Please ensure the marker is visible before capturing.');
-        return;
-      }
-
-      try {
-        // Create flash effect
-        flash.classList.add('active');
-        setTimeout(() => flash.classList.remove('active'), 200);
-
-        // Get the video element (camera stream)
-        const video = document.querySelector('video');
-
-        // Create a canvas to combine camera view and AR scene
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        // Set canvas size to match video dimensions
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        // Draw the video frame (camera view) onto the canvas
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Get the AR scene canvas
-        const arCanvas = document.querySelector('a-scene').components.screenshot.getCanvas('perspective');
-
-        // Draw the AR scene on top of the camera view
-        ctx.drawImage(arCanvas, 0, 0, canvas.width, canvas.height);
-        
-        // Convert canvas to blob
-        canvas.toBlob((blob) => {
-          // Create download link
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.download = 'IMG' + new Date().getFullYear() + new Date().getTime() + '.png';
-          link.href = url;
-          
-          // Trigger download
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          // Clean up
-          URL.revokeObjectURL(url);
-        }, 'image/png');
-
-      } catch (error) {
-        console.error('Error capturing AR scene:', error);
-        alert('Failed to capture AR scene. Please try again.');
-      }
-    });
-
-    // Ensure homepage is shown on load
     window.onload = function() {
       showPage('homepage');
     };
